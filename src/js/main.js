@@ -20,7 +20,7 @@ var sceneWrapp = function () {
 var init = function() {
     // create the scene
     scene = new THREE.Scene();
-    // scene.background = new THREE.Color(0xffffff);
+    scene.background = new THREE.Color(0xffffff);
 
     // create an locate the camera
     camera = new THREE.PerspectiveCamera(75,
@@ -31,6 +31,10 @@ var init = function() {
     camera.lookAt(new THREE.Vector3());
 
     var controls = new OrbitControls( camera );
+
+    //don't allow bellow ground & max distance
+    controls.maxPolarAngle = Math.PI/2;
+    controls.maxDistance = 400;
 
     //THIS IS IMPORTANT !!!
     light = new THREE.AmbientLight('0xffffff');
