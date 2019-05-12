@@ -1,5 +1,6 @@
 var THREE = require('three');
-
+var OrbitControls = require('three-orbit-controls')(THREE);
+// console.log(OrbitControls);
 var scene,
     camera,
     light,
@@ -26,6 +27,10 @@ var init = function() {
                     window.innerWidth / window.innerHeight,
                     1, 1000);
     camera.position.z = 20;
+    camera.position.set(0, 8, -20);
+    camera.lookAt(new THREE.Vector3());
+
+    var controls = new OrbitControls( camera );
 
     //THIS IS IMPORTANT !!!
     light = new THREE.AmbientLight('0xffffff');
@@ -45,6 +50,7 @@ var init = function() {
 // main animation loop - calls 50-60 times per second.
 var mainLoop = function() {
     renderer.render(scene, camera);
+
     requestAnimationFrame(mainLoop);
 };
 

@@ -23,6 +23,8 @@
     "gulp-sass": "^4.0.2",
     "gulp-util": "^3.0.8",
     "three": "^0.104.0",
+    "three-orbit-controls": "^82.1.0",
     "vinyl-source-stream": "^2.0.0"
-  }
+  },
+  "dependencies": {}
 }
