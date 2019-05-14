@@ -39,7 +39,41 @@ var box = function (width, height, depth, color, posX, posY, posZ) {
     box.position.set(posX, posY, posZ);
 }
 
+var audio = function () {
+    var file = document.getElementById("audioFile");
+    var audio = document.getElementById("audioPlayer");
+
+    document.onload = function(e){
+        console.log(e);
+        audio.play();
+        play();
+    }
+    file.onchange = function(){
+        var files = this.files;
+
+        audio.src = URL.createObjectURL(files[0]);
+        audio.load();
+        audio.play();
+        play();
+    }
+    var context = new AudioContext();
+    var src = context.createMediaElementSource(audio);
+    var analyser = context.createAnalyser();
+    console.log(context);
+    console.log(src);
+    console.log(analyser);
+    src.connect(analyser);
+    analyser.connect(context.destination);
+    analyser.fftSize = 512;
+    var bufferLength = analyser.frequencyBinCount;
+    var dataArray = new Uint8Array(bufferLength);
+    analyser.getByteFrequencyData(dataArray);
+    console.log(dataArray)
+}
+
 var init = function() {
+    audio();
+
     // create the scene
     scene = new THREE.Scene();
     // scene.background = new THREE.Color(0x000000);
@@ -54,21 +88,21 @@ var init = function() {
     var controls = new OrbitControls( camera );
 
     //don't allow bellow ground & max distance
-    // controls.maxPolarAngle = Math.PI/2;
+    controls.maxPolarAngle = Math.PI/2;
     controls.maxDistance = 400;
 
     //THIS IS IMPORTANT !!!
 
-    // light = new THREE.HemisphereLight('0xffffff');
+    // light = new THREE.AmbientLight('0xffffff', 0.4);
     // scene.add(light);
 
-    var directionalLight = new THREE.DirectionalLight( 'cyan', 1 );
-    directionalLight.position.set( -100, -500, 500 );
+    var directionalLight = new THREE.DirectionalLight( 'pink', 1 );
+    directionalLight.position.set( 500, 500, 500 );
     directionalLight.castShadow = true;
     scene.add( directionalLight );
 
     var spotLightRight = new THREE.SpotLight( 'grey', 2);
-    spotLightRight.position.set( -200, 250, -500 );
+    spotLightRight.position.set( -500, 500, -500 );
     spotLightRight.target.position.set( 0, 0, 0 );
     spotLightRight.castShadow = true;
     spotLightRight.shadow.camera.near = 10; // default
@@ -76,8 +110,8 @@ var init = function() {
     scene.add( spotLightRight.target );
     scene.add( spotLightRight );
 
-    var spotLightLeft = new THREE.SpotLight( 'red', 1);
-    spotLightLeft.position.set( 200, 200, 200 );
+    var spotLightLeft = new THREE.SpotLight( 'red', 2);
+    spotLightLeft.position.set( 500, 500, -500 );
     spotLightLeft.target.position.set( 100, -50, 0 );
     spotLightLeft.castShadow = true;
     spotLightLeft.shadow.camera.near = 10; // default
@@ -88,17 +122,19 @@ var init = function() {
     sceneWrapp();
     sphere(50, 50, 50, 'yellow', 0, -50, 0);
     box(10, 100, 10, 'green', 100, -50, 0);
-    spotLightLeft.shadowCameraVisible = true;
-    spotLightRight.shadowCameraVisible = true;
-    directionalLight.shadowCameraVisible = true;
+    // spotLightLeft.shadowCameraVisible = true;
+    // spotLightRight.shadowCameraVisible = true;
+    // directionalLight.shadowCameraVisible = true;
     // create the renderer
-    renderer = new THREE.WebGLRenderer();
+    renderer = new THREE.WebGLRenderer({alpha: true, antialias: true});
     renderer.setSize(window.innerWidth, window.innerHeight);
 
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.BasicShadowMap;
 
-    document.body.appendChild(renderer.domElement);
+    document.getElementById('output').appendChild(renderer.domElement);
+
+    // window.addEventListener('resize', onWindowResize, false);
 
 };
 
