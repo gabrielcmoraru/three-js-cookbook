@@ -1,7 +1,7 @@
 var THREE = require('three');
 var OrbitControls = require('three-orbit-controls')(THREE);
 // console.log(OrbitControls);
-
+console.log(objCase)
 //Three js
 var scene,
     camera,
@@ -34,26 +34,18 @@ var sceneWrapp = function () {
     sceneWrapp.receiveShadow = true;
 }
 
-var sphere = function (radius, horizontalS, verticalS, color, posX, posY, posZ) {
+function sphere (radius, horizontalS, verticalS, color) {
     var geometry = new THREE.SphereGeometry( radius, horizontalS, verticalS);
     var material = new THREE.MeshPhongMaterial({color: color, shininess: 100, wireframe:false});
 
-    var sphere = new THREE.Mesh( geometry, material );
-    sphere.castShadow = true;
-    sphere.receiveShadow = false;
-    scene.add( sphere );
-    sphere.position.set(posX, posY, posZ);
+    return new THREE.Mesh( geometry, material );
 }
 
-var box = function (width, height, depth, color, posX, posY, posZ) {
+function box (width, height, depth, color) {
     var geometry = new THREE.BoxGeometry( width, height, depth, 100, 100, 100);
     var material = new THREE.MeshPhongMaterial({color: color, shininess: 100, wireframe:false});
 
-    var box = new THREE.Mesh( geometry, material );
-    box.castShadow = true;
-    box.receiveShadow = false;
-    scene.add( box );
-    box.position.set(posX, posY, posZ);
+    return new THREE.Mesh( geometry, material );
 }
 
 var audioAnalyze = function () {
@@ -127,8 +119,24 @@ var init = function() {
     scene.add( spotLightLeft );
 
     sceneWrapp();
-    sphere(50, 50, 50, 'yellow', 0, -50, 0);
-    box(10, 100, 10, 'green', 100, -50, 0);
+
+    var sphereItem = new sphere(50, 50, 50, 'yellow');
+
+    sphereItem.castShadow = true;
+    sphereItem.receiveShadow = false;
+    sphereItem.position.set(0, -50, 0);
+    scene.add( sphereItem );
+
+    objCase.push(sphereItem);
+
+    var boxItem = new box(10, 100, 10, 'green');
+
+    boxItem.castShadow = true;
+    boxItem.receiveShadow = false;
+    boxItem.position.set(100, -50, 0);
+    scene.add( boxItem );
+
+    objCase.push(boxItem);
     // spotLightLeft.shadowCameraVisible = true;
     // spotLightRight.shadowCameraVisible = true;
     // directionalLight.shadowCameraVisible = true;
@@ -149,8 +157,13 @@ var init = function() {
 
 // main animation loop - calls 50-60 times per second.
 var mainLoop = function() {
-    renderer.render(scene, camera);
     analyser.getByteFrequencyData(dataArray);
+
+    scene.rotation.y += 0.01;
+    // console.log(sphere)
+
+
+    renderer.render(scene, camera);
     requestAnimationFrame(mainLoop);
 };
 
