@@ -1,10 +1,27 @@
 var THREE = require('three');
 var OrbitControls = require('three-orbit-controls')(THREE);
 // console.log(OrbitControls);
+
+//Three js
 var scene,
     camera,
     light,
     renderer;
+
+//Audio API
+var file = document.getElementById("audioFile"),
+    audio = document.getElementById("audioPlayer"),
+    context = new AudioContext(),
+    src = context.createMediaElementSource(audio),
+    analyser = context.createAnalyser(),
+    bufferLength = analyser.frequencyBinCount,
+    dataArray = new Uint8Array(bufferLength);
+
+var onWindowResize = function () {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
 
 var sceneWrapp = function () {
     var geometry = new THREE.PlaneGeometry(1000, 1000, 50, 50);
@@ -39,14 +56,19 @@ var box = function (width, height, depth, color, posX, posY, posZ) {
     box.position.set(posX, posY, posZ);
 }
 
-var audio = function () {
-    var file = document.getElementById("audioFile");
-    var audio = document.getElementById("audioPlayer");
+var audioAnalyze = function () {
 
+    src.connect(analyser);
+    analyser.connect(context.destination);
+    analyser.fftSize = 512;
+
+    analyser.getByteFrequencyData(dataArray);
+}
+
+var audioHandler = function () {
     document.onload = function(e){
         console.log(e);
         audio.play();
-        play();
     }
     file.onchange = function(){
         var files = this.files;
@@ -54,34 +76,19 @@ var audio = function () {
         audio.src = URL.createObjectURL(files[0]);
         audio.load();
         audio.play();
-        play();
     }
-    var context = new AudioContext();
-    var src = context.createMediaElementSource(audio);
-    var analyser = context.createAnalyser();
-    console.log(context);
-    console.log(src);
-    console.log(analyser);
-    src.connect(analyser);
-    analyser.connect(context.destination);
-    analyser.fftSize = 512;
-    var bufferLength = analyser.frequencyBinCount;
-    var dataArray = new Uint8Array(bufferLength);
-    analyser.getByteFrequencyData(dataArray);
-    console.log(dataArray)
+    audioAnalyze();
 }
 
 var init = function() {
-    audio();
+    audioHandler();
 
     // create the scene
     scene = new THREE.Scene();
     // scene.background = new THREE.Color(0x000000);
 
     // create an locate the camera
-    camera = new THREE.PerspectiveCamera(75,
-                    window.innerWidth / window.innerHeight,
-                    1, 1000);
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
     camera.position.z = 20;
     camera.position.set(0, 8, -200);
 
@@ -134,7 +141,8 @@ var init = function() {
 
     document.getElementById('output').appendChild(renderer.domElement);
 
-    // window.addEventListener('resize', onWindowResize, false);
+    window.addEventListener('resize', onWindowResize, false);
+    mainLoop();
 
 };
 
@@ -142,10 +150,9 @@ var init = function() {
 // main animation loop - calls 50-60 times per second.
 var mainLoop = function() {
     renderer.render(scene, camera);
-
+    analyser.getByteFrequencyData(dataArray);
     requestAnimationFrame(mainLoop);
 };
 
 init();
-mainLoop();
 
