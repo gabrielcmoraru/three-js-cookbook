@@ -8,6 +8,27 @@ var scene,
     light,
     renderer;
 
+
+//helper functions
+function fractionate(val, minVal, maxVal) {
+    return (val - minVal)/(maxVal - minVal);
+}
+
+function modulate(val, minVal, maxVal, outMin, outMax) {
+    var fr = fractionate(val, minVal, maxVal);
+    var delta = outMax - outMin;
+    return outMin + (fr * delta);
+}
+
+function avg(arr){
+    var total = arr.reduce(function(sum, b) { return sum + b; });
+    return (total / arr.length);
+}
+
+function max(arr){
+    return arr.reduce(function(a, b){ return Math.max(a, b); })
+}
+
 //Audio API
 var file = document.getElementById("audioFile"),
     audio = document.getElementById("audioPlayer"),
@@ -29,7 +50,7 @@ var sceneWrapp = function () {
 
     var sceneWrapp = new THREE.Mesh(geometry, material);
     sceneWrapp.rotation.x = Math.PI / 2;
-    sceneWrapp.position.y = -100;
+    sceneWrapp.position.y = 0;
     scene.add(sceneWrapp);
     sceneWrapp.receiveShadow = true;
 }
@@ -82,13 +103,13 @@ var init = function() {
     // create an locate the camera
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
     camera.position.z = 20;
-    camera.position.set(0, 8, -200);
+    camera.position.set(0, 300, -600);
 
     var controls = new OrbitControls( camera );
 
     //don't allow bellow ground & max distance
     controls.maxPolarAngle = Math.PI/2;
-    controls.maxDistance = 400;
+    controls.maxDistance = 1000;
 
     //THIS IS IMPORTANT !!!
 
@@ -120,23 +141,46 @@ var init = function() {
 
     sceneWrapp();
 
-    var sphereItem = new sphere(50, 50, 50, 'yellow');
+    var sphereG = new THREE.Group()
+    var generatedX = -100;
+    var generatedY = 0;
+    var generatedZ = -300;
+    for (let index = 0; index < 3; index++) {
+        var objColor =  Math.random() * 0xff00000 - 0xff00000;
+        var sphereItem = new sphere(50, 50, 50, objColor);
+        sphereItem.castShadow = true;
+        sphereItem.receiveShadow = false;
+        sphereItem.name = 'sphere-' + index;
+        sphereItem.position.x = generatedX;
+        sphereItem.position.y = generatedY;
+        sphereItem.position.z = generatedZ;
+        generatedX += 220;
+        generatedZ += 220;
+        sphereG.add(sphereItem);
+    }
+    objCase.push(sphereG);
+    scene.add( sphereG );
 
-    sphereItem.castShadow = true;
-    sphereItem.receiveShadow = false;
-    sphereItem.position.set(0, -50, 0);
-    scene.add( sphereItem );
+    var boxG = new THREE.Group()
+    var generatedX = 100;
+    var generatedY = 0;
+    var generatedZ = 300;
+    for (let index = 0; index < 3; index++) {
+        var objColor =  Math.random() * 0xff00000 - 0xff00000;
+        var boxItem = new box(30, 100, 30, objColor);
+        boxItem.castShadow = true;
+        boxItem.receiveShadow = false;
+        boxItem.name = 'box-' + index;
+        boxItem.position.x = generatedX;
+        boxItem.position.y = generatedY;
+        boxItem.position.z = generatedZ;
+        generatedX -= 220;
+        generatedZ -= 220;
+        boxG.add(boxItem );
+    }
+    objCase.push(boxG);
+    scene.add( boxG );
 
-    objCase.push(sphereItem);
-
-    var boxItem = new box(10, 100, 10, 'green');
-
-    boxItem.castShadow = true;
-    boxItem.receiveShadow = false;
-    boxItem.position.set(100, -50, 0);
-    scene.add( boxItem );
-
-    objCase.push(boxItem);
     // spotLightLeft.shadowCameraVisible = true;
     // spotLightRight.shadowCameraVisible = true;
     // directionalLight.shadowCameraVisible = true;
@@ -154,13 +198,43 @@ var init = function() {
 
 };
 
+function distortionSphere(mesh, oscilator, amp) {
+    var offset = mesh.geometry.parameters.radius;
+    mesh.scale.x = (offset * oscilator * amp) + 0.01;
+    mesh.scale.y = (offset * oscilator * amp) + 0.01;
+    mesh.scale.z = (offset * oscilator * amp) + 0.01;
+}
+
+function distortionBox(mesh, oscilator, amp) {
+    mesh.scale.y = (oscilator * amp * 3) + 0.01;
+    mesh.translateY = (oscilator * amp) + 0.01;
+}
 
 // main animation loop - calls 50-60 times per second.
 var mainLoop = function() {
     analyser.getByteFrequencyData(dataArray);
 
-    scene.rotation.y += 0.01;
-    // console.log(sphere)
+    var lowerHalfArray = dataArray.slice(0, (dataArray.length/2) - 1);
+    var upperHalfArray = dataArray.slice((dataArray.length/2) - 1, dataArray.length - 1);
+
+    var overallAvg = avg(dataArray);
+    var lowerMax = max(lowerHalfArray);
+    var lowerAvg = avg(lowerHalfArray);
+    var upperMax = max(upperHalfArray);
+    var upperAvg = avg(upperHalfArray);
+
+    var lowerMaxFr = lowerMax / lowerHalfArray.length;
+    var lowerAvgFr = lowerAvg / lowerHalfArray.length;
+    var upperMaxFr = upperMax / upperHalfArray.length;
+    var upperAvgFr = upperAvg / upperHalfArray.length;
+
+    objCase[0].children.forEach(element => {
+        distortionSphere(element, modulate(Math.pow(lowerAvgFr, 3), 0, 1, 0, 8), 3);
+    });
+    // distortionSphere(objCase[0].children, modulate(Math.pow(lowerAvgFr, 3), 0, 1, 0, 8), 3);
+    distortionBox(objCase[1], modulate(Math.pow(lowerAvgFr, 3), 0, 1, 0, 8), 100);
+
+    scene.rotation.y += 0.001;
 
 
     renderer.render(scene, camera);
