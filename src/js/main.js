@@ -113,15 +113,15 @@ var init = function() {
 
     //THIS IS IMPORTANT !!!
 
-    // light = new THREE.AmbientLight('0xffffff', 0.4);
-    // scene.add(light);
-
-    var directionalLight = new THREE.DirectionalLight( 'pink', 1 );
+    light = new THREE.AmbientLight('0xffffff', 0.4);
+    scene.add(light);
+    var objColor =  Math.random() * 0xff00000 - 0xff00000;
+    var directionalLight = new THREE.DirectionalLight( objColor, 1 );
     directionalLight.position.set( 500, 500, 500 );
     directionalLight.castShadow = true;
     scene.add( directionalLight );
 
-    var spotLightRight = new THREE.SpotLight( 'grey', 2);
+    var spotLightRight = new THREE.SpotLight( objColor, 2);
     spotLightRight.position.set( -500, 500, -500 );
     spotLightRight.target.position.set( 0, 0, 0 );
     spotLightRight.castShadow = true;
@@ -130,7 +130,7 @@ var init = function() {
     scene.add( spotLightRight.target );
     scene.add( spotLightRight );
 
-    var spotLightLeft = new THREE.SpotLight( 'red', 2);
+    var spotLightLeft = new THREE.SpotLight( objColor, 2);
     spotLightLeft.position.set( 500, 500, -500 );
     spotLightLeft.target.position.set( 100, -50, 0 );
     spotLightLeft.castShadow = true;
@@ -207,7 +207,6 @@ function distortionSphere(mesh, oscilator, amp) {
 
 function distortionBox(mesh, oscilator, amp) {
     mesh.scale.y = (oscilator * amp * 3) + 0.01;
-    mesh.translateY = (oscilator * amp) + 0.01;
 }
 
 // main animation loop - calls 50-60 times per second.
@@ -232,7 +231,9 @@ var mainLoop = function() {
         distortionSphere(element, modulate(Math.pow(lowerAvgFr, 3), 0, 1, 0, 8), 3);
     });
     // distortionSphere(objCase[0].children, modulate(Math.pow(lowerAvgFr, 3), 0, 1, 0, 8), 3);
-    distortionBox(objCase[1], modulate(Math.pow(lowerAvgFr, 3), 0, 1, 0, 8), 100);
+    objCase[1].children.forEach(element => {
+        distortionBox(element, modulate(Math.pow(lowerAvgFr, 3), 0, 1, 0, 8), 100);
+    });
 
     scene.rotation.y += 0.001;
 
