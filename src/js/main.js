@@ -32,11 +32,11 @@ function max(arr){
 //Audio API
 var file = document.getElementById("audioFile"),
     audio = document.getElementById("audioPlayer"),
-    context = new AudioContext(),
-    src = context.createMediaElementSource(audio),
-    analyser = context.createAnalyser(),
-    bufferLength = analyser.frequencyBinCount,
-    dataArray = new Uint8Array(bufferLength);
+    context,
+    src,
+    analyser,
+    bufferLength,
+    dataArray;
 
 var onWindowResize = function () {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -80,8 +80,8 @@ var audioAnalyze = function () {
 
 var audioHandler = function () {
     document.onload = function(e){
-        console.log(e);
         audio.play();
+        init();
     }
     file.onchange = function(){
         var files = this.files;
@@ -89,12 +89,20 @@ var audioHandler = function () {
         audio.src = URL.createObjectURL(files[0]);
         audio.load();
         audio.play();
+        init();
     }
-    audioAnalyze();
+
 }
 
 var init = function() {
-    audioHandler();
+
+    context = new AudioContext();
+    src = context.createMediaElementSource(audio);
+    analyser = context.createAnalyser();
+    bufferLength = analyser.frequencyBinCount;
+    dataArray = new Uint8Array(bufferLength);
+
+    audioAnalyze();
 
     // create the scene
     scene = new THREE.Scene();
@@ -211,26 +219,26 @@ function distortionBox(mesh, oscilator, amp) {
 
 // main animation loop - calls 50-60 times per second.
 var mainLoop = function() {
-    analyser.getByteFrequencyData(dataArray);
+    if (dataArray.length > 0) {
+        analyser.getByteFrequencyData(dataArray);
 
-    var lowerHalfArray = dataArray.slice(0, (dataArray.length/2) - 1);
-    var upperHalfArray = dataArray.slice((dataArray.length/2) - 1, dataArray.length - 1);
+        var lowerHalfArray = dataArray.slice(0, (dataArray.length/2) - 1);
+        var upperHalfArray = dataArray.slice((dataArray.length/2) - 1, dataArray.length - 1);
 
-    var overallAvg = avg(dataArray);
-    var lowerMax = max(lowerHalfArray);
-    var lowerAvg = avg(lowerHalfArray);
-    var upperMax = max(upperHalfArray);
-    var upperAvg = avg(upperHalfArray);
+        var overallAvg = avg(dataArray);
+        var lowerMax = max(lowerHalfArray);
+        var lowerAvg = avg(lowerHalfArray);
+        var upperMax = max(upperHalfArray);
+        var upperAvg = avg(upperHalfArray);
 
-    var lowerMaxFr = lowerMax / lowerHalfArray.length;
-    var lowerAvgFr = lowerAvg / lowerHalfArray.length;
-    var upperMaxFr = upperMax / upperHalfArray.length;
-    var upperAvgFr = upperAvg / upperHalfArray.length;
-
+        var lowerMaxFr = lowerMax / lowerHalfArray.length;
+        var lowerAvgFr = lowerAvg / lowerHalfArray.length;
+        var upperMaxFr = upperMax / upperHalfArray.length;
+        var upperAvgFr = upperAvg / upperHalfArray.length;
+    }
     objCase[0].children.forEach(element => {
         distortionSphere(element, modulate(Math.pow(lowerAvgFr, 3), 0, 1, 0, 8), 3);
     });
-    // distortionSphere(objCase[0].children, modulate(Math.pow(lowerAvgFr, 3), 0, 1, 0, 8), 3);
     objCase[1].children.forEach(element => {
         distortionBox(element, modulate(Math.pow(lowerAvgFr, 3), 0, 1, 0, 8), 100);
     });
@@ -242,5 +250,4 @@ var mainLoop = function() {
     requestAnimationFrame(mainLoop);
 };
 
-init();
-
+audioHandler();
