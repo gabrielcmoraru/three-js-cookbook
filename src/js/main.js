@@ -130,23 +130,36 @@ var init = function() {
     scene.add( directionalLight );
 
     var spotLightRight = new THREE.SpotLight( objColor, 2);
-    spotLightRight.position.set( -500, 500, -500 );
+    spotLightRight.position.set( -250, 250, -250 );
     spotLightRight.target.position.set( 0, 0, 0 );
     spotLightRight.castShadow = true;
     spotLightRight.shadow.camera.near = 10; // default
     spotLightRight.shadow.camera.far = 100; // default
+    spotLightRight.angle = 0.6;
+    spotLightRight.penumbra = 0.2;
+    spotLightRight.decay = 200;
+    spotLightRight.distance = 500;
+
     scene.add( spotLightRight.target );
     scene.add( spotLightRight );
+    var lightHelperL = new THREE.SpotLightHelper( spotLightRight);
+    scene.add(lightHelperL);
 
     var spotLightLeft = new THREE.SpotLight( objColor, 2);
-    spotLightLeft.position.set( 500, 500, -500 );
-    spotLightLeft.target.position.set( 100, -50, 0 );
+    spotLightLeft.position.set( 250, 250, -250 );
+    spotLightLeft.target.position.set( 10, -50, 0 );
     spotLightLeft.castShadow = true;
     spotLightLeft.shadow.camera.near = 10; // default
     spotLightLeft.shadow.camera.far = 100; // default
+    spotLightLeft.angle = 0.6;
+    spotLightLeft.penumbra = 0.2;
+    spotLightLeft.decay = 200;
+    spotLightLeft.distance = 500;
+
     scene.add( spotLightLeft.target );
     scene.add( spotLightLeft );
-
+    var lightHelperR = new THREE.SpotLightHelper( spotLightLeft);
+    scene.add(lightHelperR);
     sceneWrapp();
 
     var sphereG = new THREE.Group()
